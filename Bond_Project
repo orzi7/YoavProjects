@@ -1,0 +1,82 @@
+#include <Keypad.h>
+
+const byte ROWS = 4;
+const byte COLS = 3;
+
+char hexaKeys[ROWS][COLS] = {
+  {'1', '2', '3'},
+  {'4', '5', '6'},
+  {'7', '8', '9'},
+  {'*', '0', '#'}
+};
+
+byte rowPins[ROWS] = {9, 8, 7, 6};
+byte colPins[COLS] = {5, 4, 3};
+
+Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+
+String result;
+String secretCode;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT);
+
+  Serial.println("Guess the number or the world will be destorye. Mohahahaha");
+
+  secretCode = randomNum();
+  Serial.print("Secret code is: ");
+  Serial.println(secretCode);
+}
+
+String randomNum() {
+  int randNum = random(1000, 10000);
+  return String(randNum);
+}
+
+bool check(String triedCode, String realCode) {
+  if (triedCode == realCode) {
+    Serial.println("yahhhhh");
+    digitalWrite(12, HIGH);
+    digitalWrite(11, LOW);
+    return true;
+  } else {
+    Serial.println("nooooo");
+    digitalWrite(11, HIGH);
+    digitalWrite(12, LOW);
+    return false;
+  }
+}
+
+void loop() {
+  delay(200);
+  digitalWrite(11, LOW);
+  digitalWrite(12, LOW);
+  char customKey = customKeypad.getKey();
+
+  if (customKey) {
+    result += customKey;
+    Serial.println(result);
+  }
+
+  if (result.length() == 4) {
+    bool correct = check(result, secretCode);
+    if (correct) {
+      secretCode = randomNum();
+      Serial.print("the code is: ");
+      Serial.println(secretCode);
+    } else {
+      Serial.print("the code was: ");
+      Serial.println(secretCode);
+      if (result.toInt() > secretCode.toInt()) {
+        Serial.println("Lower!");
+      }
+      else {
+        Serial.println("Higher!");
+      }
+    }
+    result = "";
+  }
+}
