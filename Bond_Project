@@ -24,7 +24,7 @@ void setup() {
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
 
-  Serial.println("Guess the number or the world will be destorye. Mohahahaha");
+  Serial.println("Guess the number or the world will be destoryed. Mohahahaha");
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
