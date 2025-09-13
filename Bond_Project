@@ -27,8 +27,8 @@ void setup() {
   Serial.println("Guess the number or the world will be destorye. Mohahahaha");
 
   secretCode = randomNum();
-  Serial.print("Secret code is: ");
-  Serial.println(secretCode);
+  //Serial.print("Secret code is: ");
+  //Serial.println(secretCode);
 }
 
 String randomNum() {
@@ -65,11 +65,11 @@ void loop() {
     bool correct = check(result, secretCode);
     if (correct) {
       secretCode = randomNum();
-      Serial.print("the code is: ");
-      Serial.println(secretCode);
+      //Serial.print("the code is: ");
+      //Serial.println(secretCode);
     } else {
-      Serial.print("the code was: ");
-      Serial.println(secretCode);
+      //Serial.print("the code was: ");
+      //Serial.println(secretCode);
       if (result.toInt() > secretCode.toInt()) {
         Serial.println("Lower!");
       }
