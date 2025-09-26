@@ -1,4 +1,7 @@
 #include <Keypad.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,16,2);
 
 const byte ROWS = 4;
 const byte COLS = 3;
@@ -23,11 +26,18 @@ int attempts = 1;
 void setup() {
   Serial.begin(9600);
 
+  lcd.init();
+  lcd.clear();         
+  lcd.backlight();
+
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
   pinMode(13, OUTPUT);
 
-  Serial.println("Guess the number or the world will be destoryed. Mohahahaha");
+  lcd.setCursor(0,0);
+  lcd.print("Guess the 4 nums");
+  lcd.setCursor(0,1);
+  lcd.print("or world ends!");
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
@@ -40,12 +50,18 @@ String randomNum() {
 
 bool check(String triedCode, String realCode) {
   if (triedCode == realCode) {
+    lcd.clear();
+    lcd.setCursor(2,0);
+    lcd.print("yahhhhh");
     Serial.println("yahhhhh");
     digitalWrite(13, LOW);
     digitalWrite(12, HIGH);
     digitalWrite(11, LOW);
     return true;
   } else {
+    lcd.clear();
+    lcd.setCursor(2,0);
+    lcd.print("nooooo");
     Serial.println("nooooo");
   }
   if (triedCode > realCode) {
@@ -78,6 +94,9 @@ void loop() {
     else {
       result += customKey;
     }
+    lcd.clear();
+    lcd.setCursor(2,0);
+    lcd.print(result);
     Serial.println(result);
   }
 
@@ -85,16 +104,28 @@ void loop() {
     bool correct = check(result, secretCode);
     if (correct) {
       secretCode = randomNum();
+      lcd.clear();
+      lcd.setCursor(2,0);
+      lcd.print("you made it in: ");
       Serial.print("you made it in: ");
       Serial.print(attempts);
+      lcd.clear();
+      lcd.setCursor(2,1);
+      lcd.print(attempts);
       Serial.println(" attempts");
       attempts = 0;
     } else {
       attempts += 1;
       if (result.toInt() > secretCode.toInt()) {
+        lcd.clear();
+        lcd.setCursor(2,0);
+        lcd.print("Lower!");
         Serial.println("Lower!");
       }
       else {
+        lcd.clear();
+        lcd.setCursor(2,0);
+        lcd.print("Higher!");
         Serial.println("Higher!");
       }
     }
