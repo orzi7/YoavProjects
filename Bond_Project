@@ -41,10 +41,12 @@ void setup() {
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
+  Serial.println(secretCode);
 }
 
 String randomNum() {
   int randNum = random(1000, 10000);
+  randNum = 6392;
   return String(randNum);
 }
 
@@ -53,7 +55,6 @@ bool check(String triedCode, String realCode) {
     lcd.clear();
     lcd.setCursor(2,0);
     lcd.print("yahhhhh");
-    Serial.println("yahhhhh");
     digitalWrite(13, LOW);
     digitalWrite(12, HIGH);
     digitalWrite(11, LOW);
@@ -62,7 +63,6 @@ bool check(String triedCode, String realCode) {
     lcd.clear();
     lcd.setCursor(2,0);
     lcd.print("nooooo");
-    Serial.println("nooooo");
   }
   if (triedCode > realCode) {
     digitalWrite(11, HIGH);
@@ -97,7 +97,6 @@ void loop() {
     lcd.clear();
     lcd.setCursor(2,0);
     lcd.print(result);
-    Serial.println(result);
   }
 
   if (result.length() == 4) {
@@ -107,26 +106,22 @@ void loop() {
       lcd.clear();
       lcd.setCursor(2,0);
       lcd.print("you made it in: ");
-      Serial.print("you made it in: ");
-      Serial.print(attempts);
-      lcd.clear();
       lcd.setCursor(2,1);
       lcd.print(attempts);
-      Serial.println(" attempts");
-      attempts = 0;
+      lcd.setCursor(4,1);
+      lcd.print("attempts");
+      attempts = 1;
     } else {
       attempts += 1;
       if (result.toInt() > secretCode.toInt()) {
         lcd.clear();
         lcd.setCursor(2,0);
         lcd.print("Lower!");
-        Serial.println("Lower!");
       }
       else {
         lcd.clear();
         lcd.setCursor(2,0);
         lcd.print("Higher!");
-        Serial.println("Higher!");
       }
     }
     result = "";
