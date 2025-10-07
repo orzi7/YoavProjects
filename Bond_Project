@@ -154,6 +154,13 @@ void loop() {
         lcd.setCursor(4,1);
         lcd.print("attempts");
         digitalWrite(12, LOW);
+        delay(2000);
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Guess the 3 colors");
+        lcd.setCursor(0,1);
+        lcd.print("or world ends!");
+        delay(2000);
         stage = 2;
       } else {
         attempts += 1;
