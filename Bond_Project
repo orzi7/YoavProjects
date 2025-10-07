@@ -65,13 +65,14 @@ void setup() {
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
-  Serial.println(secretCode);
-
 
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
+
+  myservo.write(0);
+  delay(1000);
   
   pinMode(sensorOut, INPUT);
   
@@ -152,12 +153,10 @@ void loop() {
         lcd.print(attempts);
         lcd.setCursor(4,1);
         lcd.print("attempts");
-        delay(5000);
+        digitalWrite(12, LOW);
         stage = 2;
       } else {
         attempts += 1;
-        myservo.write(180);
-        delay(1000);
         if (result.toInt() > secretCode.toInt()) {
           lcd.clear();
           lcd.setCursor(2,0);
@@ -180,62 +179,83 @@ void loop() {
       if (customKey) {
         if (customKey == '*') {
           detectedColors.remove(detectedColors.length() - 1);
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print(detectedColors);
         }
       }
-    delay(5000);
 
-    digitalWrite(S2,LOW);
-    digitalWrite(S3,LOW);
-    
-    redFrequency = pulseIn(sensorOut, LOW);
-    redColor = map(redFrequency, 70, 120, 255,0);
 
-    digitalWrite(S2,HIGH);
-    digitalWrite(S3,HIGH);
-    
-    greenFrequency = pulseIn(sensorOut, LOW);
-    greenColor = map(greenFrequency, 100, 199, 255, 0);
+    if (customKey == '#') {
 
-    digitalWrite(S2,LOW);
-    digitalWrite(S3,HIGH);
-    
-    blueFrequency = pulseIn(sensorOut, LOW);
-    blueColor = map(blueFrequency, 38, 84, 255, 0);
+      digitalWrite(S2,LOW);
+      digitalWrite(S3,LOW);
+      
+      redFrequency = pulseIn(sensorOut, LOW);
+      redColor = map(redFrequency, 70, 120, 255,0);
 
-    if(redColor > greenColor && redColor > blueColor){
-      detectedColors += "R";
+      digitalWrite(S2,HIGH);
+      digitalWrite(S3,HIGH);
+      
+      greenFrequency = pulseIn(sensorOut, LOW);
+      greenColor = map(greenFrequency, 100, 199, 255, 0);
+
+      digitalWrite(S2,LOW);
+      digitalWrite(S3,HIGH);
+      
+      blueFrequency = pulseIn(sensorOut, LOW);
+      blueColor = map(blueFrequency, 38, 84, 255, 0);
+
+      if(redColor > greenColor && redColor > blueColor){
+        detectedColors += "R";
+      }
+      if(greenColor > redColor && greenColor > blueColor){
+        detectedColors += "G";
+      }
+      if(blueColor > redColor && blueColor > greenColor){
+        detectedColors += "B";
+      }
+
+      lcd.clear();
+      lcd.setCursor(2,0);
+      lcd.print(detectedColors);
+
+      if (detectedColors.length() == 3) {
+        delay(500);
+        bool rightOrder = checkColorOrder(detectedColors, colorOrder);
+        if (rightOrder) {
+          digitalWrite(12, HIGH);
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print("you made it in: ");
+          lcd.setCursor(2,1);
+          lcd.print(colorAttempts);
+          lcd.setCursor(4,1);
+          lcd.print("attempts");
+          myservo.write(90);
+          delay(1000);
+          stage = 3;
+        } else{
+          colorAttempts += 1;
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print("wrong!");
+          detectedColors = "";
+          }
+      }
     }
-    if(greenColor > redColor && greenColor > blueColor){
-      detectedColors += "G";
-    }
-    if(blueColor > redColor && blueColor > greenColor){
-      detectedColors += "B";
-    }
+  }
 
+
+//------------------------------------------------------------------------------
+
+
+  if (stage == 3) {
+    delay(200);
     lcd.clear();
-    lcd.setCursor(2,0);
-    lcd.print(detectedColors);
-
-    if (detectedColors.length() == 3) {
-      delay(500);
-      bool rightOrder = checkColorOrder(detectedColors, colorOrder);
-      if (rightOrder) {
-        while (true) {
-        lcd.clear();
-        lcd.setCursor(2,0);
-        lcd.print("you made it in: ");
-        lcd.setCursor(2,1);
-        lcd.print(colorAttempts);
-        lcd.setCursor(4,1);
-        lcd.print("attempts");
-        }
-      } else{
-        colorAttempts += 1;
-        lcd.clear();
-        lcd.setCursor(2,0);
-        lcd.print("wrong!");
-        detectedColors = "";
-        }
-    }
+    lcd.setCursor(0,0);
+    lcd.print("Your'e the");
+    lcd.setCursor(0,1);
+    lcd.print("ultimate leader");
   }
 }
