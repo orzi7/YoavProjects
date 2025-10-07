@@ -1,7 +1,10 @@
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
+#include "Servo.h"
 
 LiquidCrystal_I2C lcd(0x27,16,2);
+Servo myservo;
+#define servoPin 2
 
 const byte ROWS = 4;
 const byte COLS = 3;
@@ -26,13 +29,15 @@ int attempts = 1;
 void setup() {
   Serial.begin(9600);
 
+  myservo.attach(servoPin);
+
   lcd.init();
   lcd.clear();         
   lcd.backlight();
 
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
-  pinMode(13, OUTPUT);
+  pinMode(19, OUTPUT);
 
   lcd.setCursor(0,0);
   lcd.print("Guess the 4 nums");
@@ -55,26 +60,25 @@ bool check(String triedCode, String realCode) {
     lcd.clear();
     lcd.setCursor(2,0);
     lcd.print("yahhhhh");
-    digitalWrite(13, LOW);
+    digitalWrite(19, LOW);
     digitalWrite(12, HIGH);
     digitalWrite(11, LOW);
     return true;
   } else {
-    lcd.clear();
-    lcd.setCursor(2,0);
-    lcd.print("nooooo");
+    //lcd.clear();
+    //lcd.setCursor(2,0);
   }
   if (triedCode > realCode) {
     digitalWrite(11, HIGH);
     digitalWrite(12, LOW);
-    digitalWrite(13, LOW);
+    digitalWrite(19, LOW);
     return false;
   }
 
   if (triedCode < realCode) {
     digitalWrite(11, LOW);
     digitalWrite(12, LOW);
-    digitalWrite(13, HIGH);
+    digitalWrite(19, HIGH);
     return false;
   }
     
@@ -84,7 +88,7 @@ void loop() {
   delay(200);
   digitalWrite(11, LOW);
   digitalWrite(12, LOW);
-  digitalWrite(13, LOW);
+  digitalWrite(19, LOW);
   char customKey = customKeypad.getKey();
 
   if (customKey) {
@@ -113,6 +117,8 @@ void loop() {
       attempts = 1;
     } else {
       attempts += 1;
+      myservo.write(180);
+      delay(1000);
       if (result.toInt() > secretCode.toInt()) {
         lcd.clear();
         lcd.setCursor(2,0);
