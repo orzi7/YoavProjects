@@ -4,7 +4,13 @@
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 Servo myservo;
+
 #define servoPin 2
+#define S0 14
+#define S1 15
+#define S2 16
+#define S3 17
+#define sensorOut 18
 
 const byte ROWS = 4;
 const byte COLS = 3;
@@ -21,10 +27,23 @@ byte colPins[COLS] = {5, 4, 3};
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
+int redFrequency = 0;
+int greenFrequency = 0;
+int blueFrequency = 0;
+
+int redColor;
+int greenColor;
+int blueColor;
+
 String result;
 String secretCode;
+String colorOrder = "BGR";
+String detectedColors = "";
 
 int attempts = 1;
+int colorAttempts = 1;
+
+int stage = 1;
 
 void setup() {
   Serial.begin(9600);
@@ -47,12 +66,31 @@ void setup() {
   randomSeed(analogRead(A0));
   secretCode = randomNum();
   Serial.println(secretCode);
+
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  
+  pinMode(sensorOut, INPUT);
+  
+  digitalWrite(S0,HIGH);
+  digitalWrite(S1,LOW);
 }
 
 String randomNum() {
   int randNum = random(1000, 10000);
   randNum = 6392;
   return String(randNum);
+}
+
+bool checkColorOrder(String triedOrder, String realOrder) {
+  if (triedOrder == realOrder) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool check(String triedCode, String realCode) {
@@ -80,56 +118,124 @@ bool check(String triedCode, String realCode) {
     digitalWrite(12, LOW);
     digitalWrite(19, HIGH);
     return false;
-  }
-    
+  } 
 }
 
 void loop() {
-  delay(200);
-  digitalWrite(11, LOW);
-  digitalWrite(12, LOW);
-  digitalWrite(19, LOW);
-  char customKey = customKeypad.getKey();
+  if (stage == 1) {
+    delay(200);
+    digitalWrite(11, LOW);
+    digitalWrite(12, LOW);
+    digitalWrite(19, LOW);
+    char customKey = customKeypad.getKey();
 
-  if (customKey) {
-    if (customKey == '*') {
-      result.remove(result.length() - 1);
-    }
-    else {
-      result += customKey;
-    }
-    lcd.clear();
-    lcd.setCursor(2,0);
-    lcd.print(result);
-  }
-
-  if (result.length() == 4) {
-    bool correct = check(result, secretCode);
-    if (correct) {
-      secretCode = randomNum();
-      lcd.clear();
-      lcd.setCursor(2,0);
-      lcd.print("you made it in: ");
-      lcd.setCursor(2,1);
-      lcd.print(attempts);
-      lcd.setCursor(4,1);
-      lcd.print("attempts");
-      attempts = 1;
-    } else {
-      attempts += 1;
-      myservo.write(180);
-      delay(1000);
-      if (result.toInt() > secretCode.toInt()) {
-        lcd.clear();
-        lcd.setCursor(2,0);
-        lcd.print("Lower!");
+    if (customKey) {
+      if (customKey == '*') {
+        result.remove(result.length() - 1);
       }
       else {
+        result += customKey;
+      }
+      lcd.clear();
+      lcd.setCursor(2,0);
+      lcd.print(result);
+    }
+
+    if (result.length() == 4) {
+      bool correct = check(result, secretCode);
+      if (correct) {
+        secretCode = randomNum();
         lcd.clear();
         lcd.setCursor(2,0);
-        lcd.print("Higher!");
+        lcd.print("you made it in: ");
+        lcd.setCursor(2,1);
+        lcd.print(attempts);
+        lcd.setCursor(4,1);
+        lcd.print("attempts");
+        delay(5000);
+        stage = 2;
+      } else {
+        attempts += 1;
+        myservo.write(180);
+        delay(1000);
+        if (result.toInt() > secretCode.toInt()) {
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print("Lower!");
+        }
+        else {
+          lcd.clear();
+          lcd.setCursor(2,0);
+          lcd.print("Higher!");
+        }
       }
+      result = "";
     }
-    result = "";
+  }
+
+//--------------------------------------------------------------------------------------------------------------
+
+  if (stage == 2) {
+    char customKey = customKeypad.getKey();
+      if (customKey) {
+        if (customKey == '*') {
+          detectedColors.remove(detectedColors.length() - 1);
+        }
+      }
+    delay(5000);
+
+    digitalWrite(S2,LOW);
+    digitalWrite(S3,LOW);
+    
+    redFrequency = pulseIn(sensorOut, LOW);
+    redColor = map(redFrequency, 70, 120, 255,0);
+
+    digitalWrite(S2,HIGH);
+    digitalWrite(S3,HIGH);
+    
+    greenFrequency = pulseIn(sensorOut, LOW);
+    greenColor = map(greenFrequency, 100, 199, 255, 0);
+
+    digitalWrite(S2,LOW);
+    digitalWrite(S3,HIGH);
+    
+    blueFrequency = pulseIn(sensorOut, LOW);
+    blueColor = map(blueFrequency, 38, 84, 255, 0);
+
+    if(redColor > greenColor && redColor > blueColor){
+      detectedColors += "R";
+    }
+    if(greenColor > redColor && greenColor > blueColor){
+      detectedColors += "G";
+    }
+    if(blueColor > redColor && blueColor > greenColor){
+      detectedColors += "B";
+    }
+
+    lcd.clear();
+    lcd.setCursor(2,0);
+    lcd.print(detectedColors);
+
+    if (detectedColors.length() == 3) {
+      delay(500);
+      bool rightOrder = checkColorOrder(detectedColors, colorOrder);
+      if (rightOrder) {
+        while (true) {
+        lcd.clear();
+        lcd.setCursor(2,0);
+        lcd.print("you made it in: ");
+        lcd.setCursor(2,1);
+        lcd.print(colorAttempts);
+        lcd.setCursor(4,1);
+        lcd.print("attempts");
+        }
+      } else{
+        colorAttempts += 1;
+        lcd.clear();
+        lcd.setCursor(2,0);
+        lcd.print("wrong!");
+        detectedColors = "";
+        }
+    }
   }
 }
