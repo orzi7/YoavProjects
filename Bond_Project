@@ -1,6 +1,7 @@
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
 #include "Servo.h"
+#include <Arduino.h>
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 Servo myservo;
@@ -11,6 +12,83 @@ Servo myservo;
 #define S2 16
 #define S3 17
 #define sensorOut 18
+
+#define NOTE_B0 31
+#define NOTE_C1 33
+#define NOTE_CS1 35
+#define NOTE_D1 37
+#define NOTE_DS1 39
+#define NOTE_E1 41
+#define NOTE_F1 44
+#define NOTE_FS1 46
+#define NOTE_G1 49
+#define NOTE_GS1 52
+#define NOTE_A1 55
+#define NOTE_AS1 58
+#define NOTE_B1 62
+#define NOTE_C2 65
+#define NOTE_CS2 69
+#define NOTE_D2 73
+#define NOTE_DS2 78
+#define NOTE_E2 82
+#define NOTE_F2 87
+#define NOTE_FS2 93
+#define NOTE_G2 98
+#define NOTE_GS2 104
+#define NOTE_A2 110
+#define NOTE_AS2 117
+#define NOTE_B2 123
+#define NOTE_C3 131
+#define NOTE_CS3 139
+#define NOTE_D3 147
+#define NOTE_DS3 156
+#define NOTE_E3 165
+#define NOTE_F3 175
+#define NOTE_FS3 185
+#define NOTE_G3 196
+#define NOTE_GS3 208
+#define NOTE_A3 220
+#define NOTE_AS3 233
+#define NOTE_B3 247
+#define NOTE_C4 262
+#define NOTE_CS4 277
+#define NOTE_D4 294
+#define NOTE_DS4 311
+#define NOTE_E4 330
+#define NOTE_F4 349
+#define NOTE_FS4 370
+#define NOTE_G4 392
+#define NOTE_GS4 415
+#define NOTE_A4 440
+#define NOTE_AS4 466
+#define NOTE_B4 494
+#define NOTE_C5 523
+#define NOTE_CS5 554
+#define NOTE_D5 587
+#define NOTE_DS5 622
+#define NOTE_E5 659
+#define NOTE_F5 698
+#define NOTE_FS5 740
+#define NOTE_G5 784
+#define NOTE_GS5 831
+#define NOTE_A5 880
+#define NOTE_AS5 932
+#define NOTE_B5 988
+#define NOTE_C6 1047
+#define NOTE_CS6 1109
+#define NOTE_D6 1175
+#define NOTE_DS6 1245
+#define NOTE_E6 1319
+#define NOTE_F6 1397
+#define NOTE_FS6 1480
+#define NOTE_G6 1568
+#define NOTE_GS6 1661
+#define NOTE_A6 1760
+#define NOTE_AS6 1865
+#define NOTE_B6 1976
+
+
+const int buzzerPin = 28;
 
 const byte ROWS = 4;
 const byte COLS = 3;
@@ -43,7 +121,65 @@ String detectedColors = "";
 int attempts = 1;
 int colorAttempts = 1;
 
-int stage = 1;
+int minutes = 0;
+int seconds = 0;
+
+int stage = 0;
+
+bool playedLoosingSound = false;
+
+unsigned long lastTimerUpdate = 0;
+
+void setTime(int startMinutes, int startSeconds) {
+  minutes = startMinutes;
+  seconds = startSeconds;
+}
+
+void updateTimer() {
+  if (stage != 3) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastTimerUpdate >= 1000) {
+      lastTimerUpdate = currentMillis;
+
+      if (minutes >= 0 && seconds >= 0) {
+        if (seconds == 0) {
+          minutes--;
+          seconds = 59;
+        } else {
+          seconds--;
+        }
+
+        lcd.setCursor(6, 1);
+        if (minutes < 10) lcd.print("0");
+        lcd.print(minutes);
+        lcd.print(":");
+        if (seconds < 10) lcd.print("0");
+        lcd.print(seconds);
+      } else {
+        lcd.clear();
+        lcd.setCursor(0, 1);
+        lcd.print("Time's up!");
+        if (playedLoosingSound == false) {
+          int loseMelody[] = { NOTE_C5, NOTE_GS4, NOTE_E4 };
+          int loseDurations[] = { 300, 300, 400 };
+          playMelody(loseMelody, loseDurations, 3);
+          playedLoosingSound = true;
+        }
+      }
+    }
+  }
+}
+
+
+void playMelody(int melody[], int noteDurations[], int length) {
+  for (int i = 0; i < length; i++) {
+    int noteDuration = noteDurations[i];
+    tone(buzzerPin, melody[i], noteDuration);
+    delay(noteDuration * 1.30); // wait between notes
+    noTone(buzzerPin);
+  }
+}
+
 
 void setup() {
   Serial.begin(9600);
@@ -57,11 +193,6 @@ void setup() {
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
   pinMode(19, OUTPUT);
-
-  lcd.setCursor(0,0);
-  lcd.print("Guess the 4 nums");
-  lcd.setCursor(0,1);
-  lcd.print("or world ends!");
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
@@ -78,11 +209,21 @@ void setup() {
   
   digitalWrite(S0,HIGH);
   digitalWrite(S1,LOW);
+
+  setTime(3, 30);
+
+  lcd.setCursor(0,0);
+  lcd.print("Guess the 4 nums");
+  lcd.setCursor(0,1);
+  lcd.print("or world ends!");
+  delay(3000);
+  lcd.clear();
+  stage = 1;
 }
 
 String randomNum() {
   int randNum = random(1000, 10000);
-  randNum = 6392;
+  //randNum = 5476;
   return String(randNum);
 }
 
@@ -92,6 +233,11 @@ bool checkColorOrder(String triedOrder, String realOrder) {
   } else {
     return false;
   }
+}
+
+void clearTop() {
+  lcd.setCursor(0, 0);
+  lcd.print("                ");
 }
 
 bool check(String triedCode, String realCode) {
@@ -123,8 +269,9 @@ bool check(String triedCode, String realCode) {
 }
 
 void loop() {
+  updateTimer();
+
   if (stage == 1) {
-    delay(200);
     digitalWrite(11, LOW);
     digitalWrite(12, LOW);
     digitalWrite(19, LOW);
@@ -137,7 +284,7 @@ void loop() {
       else {
         result += customKey;
       }
-      lcd.clear();
+      clearTop();
       lcd.setCursor(2,0);
       lcd.print(result);
     }
@@ -146,7 +293,7 @@ void loop() {
       bool correct = check(result, secretCode);
       if (correct) {
         secretCode = randomNum();
-        lcd.clear();
+        clearTop();
         lcd.setCursor(2,0);
         lcd.print("you made it in: ");
         lcd.setCursor(2,1);
@@ -155,22 +302,23 @@ void loop() {
         lcd.print("attempts");
         digitalWrite(12, LOW);
         delay(2000);
-        lcd.clear();
+        clearTop();
         lcd.setCursor(0,0);
-        lcd.print("Guess the 3 colors");
+        lcd.print("Guess 3 colors");
         lcd.setCursor(0,1);
         lcd.print("or world ends!");
         delay(2000);
+        lcd.clear();
         stage = 2;
       } else {
         attempts += 1;
         if (result.toInt() > secretCode.toInt()) {
-          lcd.clear();
+          clearTop();
           lcd.setCursor(2,0);
           lcd.print("Lower!");
         }
         else {
-          lcd.clear();
+          clearTop();
           lcd.setCursor(2,0);
           lcd.print("Higher!");
         }
@@ -186,7 +334,7 @@ void loop() {
       if (customKey) {
         if (customKey == '*') {
           detectedColors.remove(detectedColors.length() - 1);
-          lcd.clear();
+          clearTop();
           lcd.setCursor(2,0);
           lcd.print(detectedColors);
         }
@@ -223,7 +371,7 @@ void loop() {
         detectedColors += "B";
       }
 
-      lcd.clear();
+      clearTop();
       lcd.setCursor(2,0);
       lcd.print(detectedColors);
 
@@ -232,7 +380,7 @@ void loop() {
         bool rightOrder = checkColorOrder(detectedColors, colorOrder);
         if (rightOrder) {
           digitalWrite(12, HIGH);
-          lcd.clear();
+          clearTop();
           lcd.setCursor(2,0);
           lcd.print("you made it in: ");
           lcd.setCursor(2,1);
@@ -240,11 +388,25 @@ void loop() {
           lcd.setCursor(4,1);
           lcd.print("attempts");
           myservo.write(90);
+
+          int starWarsMelody[] = {
+            NOTE_A4, NOTE_A4, NOTE_A4, NOTE_F5, NOTE_C6,
+            NOTE_A4, NOTE_F5, NOTE_C6, NOTE_A4,
+            NOTE_E6, NOTE_E6, NOTE_E6, NOTE_F6, NOTE_C6, NOTE_GS5, NOTE_F5, NOTE_C6, NOTE_A4
+          };
+
+          int starWarsDurations[] = {
+            500, 500, 500, 350, 150,
+            500, 350, 150, 650,
+            500, 500, 500, 350, 150, 500, 350, 150, 650
+          };
+          playMelody(starWarsMelody, starWarsDurations, 18);
+
           delay(1000);
           stage = 3;
         } else{
           colorAttempts += 1;
-          lcd.clear();
+          clearTop();
           lcd.setCursor(2,0);
           lcd.print("wrong!");
           detectedColors = "";
