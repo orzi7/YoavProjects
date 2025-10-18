@@ -115,7 +115,7 @@ int blueColor;
 
 String result;
 String secretCode;
-String colorOrder = "BGR";
+String colorOrder;
 String detectedColors = "";
 
 int attempts = 1;
@@ -196,6 +196,7 @@ void setup() {
 
   randomSeed(analogRead(A0));
   secretCode = randomNum();
+  colorOrder = randomColor();
 
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
@@ -225,6 +226,16 @@ String randomNum() {
   int randNum = random(1000, 10000);
   //randNum = 5476;
   return String(randNum);
+}
+
+String randomColor() {
+  String randColorOptions[] = {"B", "G", "R"};
+  int randColorNum1 = random(0, 3);
+  int randColorNum2 = random(0, 3);
+  int randColorNum3 = random(0, 3);
+  String randColor = randColorOptions[randColorNum1] + randColorOptions[randColorNum2] + randColorOptions[randColorNum3];
+  //randColor = "BGR";
+  return String(randColor);
 }
 
 bool checkColorOrder(String triedOrder, String realOrder) {
