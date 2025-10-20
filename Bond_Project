@@ -347,6 +347,7 @@ void loop() {
         if (attempts > 0) {
           attempts -= 1;
         }
+        seconds += 10;
         if (result.toInt() > secretCode.toInt()) {
           clearTop();
           lcd.setCursor(2,0);
