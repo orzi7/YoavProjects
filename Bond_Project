@@ -192,7 +192,6 @@ void setup() {
 
   lcd.init();
   lcd.clear();         
-  lcd.backlight();
 
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
@@ -231,7 +230,7 @@ void setup() {
 
 String randomNum() {
   int randNum = random(1000, 10000);
-  //randNum = 6392;
+  randNum = 6392;
   return String(randNum);
 }
 
@@ -241,7 +240,7 @@ String randomColor() {
   int randColorNum2 = random(0, 3);
   int randColorNum3 = random(0, 3);
   String randColor = randColorOptions[randColorNum1] + randColorOptions[randColorNum2] + randColorOptions[randColorNum3];
-  //randColor = "BGR";
+  randColor = "BGR";
   return String(randColor);
 }
 
@@ -433,7 +432,7 @@ void loop() {
           lcd.print(colorAttempts);
           lcd.setCursor(4,1);
           lcd.print("attempts");
-          myservo.write(90);
+          myservo.write(-90);
 
           int winMelody[] = {
             NOTE_E5, NOTE_E5, NOTE_E5, 
