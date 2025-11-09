@@ -5,7 +5,6 @@
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 Servo myservo;
-int pos = 0;
 
 #define servoPin 2
 #define S0 14
@@ -211,7 +210,7 @@ void setup() {
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
 
-  myservo.write(0);
+  myservo.write(90);
   delay(1000);
   
   pinMode(sensorOut, INPUT);
@@ -393,17 +392,18 @@ void loop() {
       digitalWrite(S2,LOW);
       digitalWrite(S3,LOW);
       redFrequency = pulseIn(sensorOut, LOW);
-      redColor = map(redFrequency, 70, 120, 255, 0);
-
+      redColor   = map(redFrequency, 50, 300, 255, 0);
+      
       digitalWrite(S2,HIGH);
       digitalWrite(S3,HIGH);
       greenFrequency = pulseIn(sensorOut, LOW);
-      greenColor = map(greenFrequency, 100, 199, 255, 0);
+      greenColor = map(greenFrequency, 100, 220, 255, 0);
 
-      digitalWrite(S2,LOW);
+      digitalWrite(S2,LOW); 
       digitalWrite(S3,HIGH);
       blueFrequency = pulseIn(sensorOut, LOW);
-      blueColor = map(blueFrequency, 38, 84, 255, 0);
+      blueColor  = map(blueFrequency, 40, 90, 255, 0);
+
 
       if (redColor > greenColor && redColor > blueColor){
         detectedColors += "R";
@@ -451,11 +451,9 @@ void loop() {
             125, 125,
             125, 125, 125, 250
           };
-          //playMelody(winMelody, winDurations, 24);
-          for (pos = 0; pos >= -90; pos -= 1) {
-            myservo.write(pos);
-            delay(5);
-          }
+          playMelody(winMelody, winDurations, 24);
+          myservo.write(0);
+          delay(500);
 
           stage = 3;
         } else{
