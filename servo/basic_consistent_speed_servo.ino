@@ -1,6 +1,6 @@
 #include <Servo.h>
 Servo myServo;
-int speedValue = 0
+int speedValue = 0;
 
 void setup() {
   myServo.attach(9);
