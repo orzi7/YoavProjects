@@ -231,7 +231,7 @@ void setup() {
 
 String randomNum() {
   int randNum = random(1000, 10000);
-  randNum = 6392;
+  //randNum = 4587;
   return String(randNum);
 }
 
@@ -241,7 +241,7 @@ String randomColor() {
   int randColorNum2 = random(0, 3);
   int randColorNum3 = random(0, 3);
   String randColor = randColorOptions[randColorNum1] + randColorOptions[randColorNum2] + randColorOptions[randColorNum3];
-  randColor = "BGR";
+  randColor = "RBG";
   return String(randColor);
 }
 
