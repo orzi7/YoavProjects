@@ -7,7 +7,13 @@ const int joystickYPin = A0;
 const int servoRightPin = 9;
 const int servoLeftPin = 10;
 
+const int deadzone = 20;
+const int middleJoystick = 430;
+
+const int multification = (2200/2450);
+
 int pwmValue;
+int pwmRight;
 
 void setup() {
   Serial.begin(9600);
@@ -32,16 +38,18 @@ void setup() {
 void loop() {
   int joyValue = analogRead(joystickYPin);
   
-  if (joyValue < 500) {
+  if (joyValue < (middleJoystick - deadzone)) {
     pwmValue = map(joyValue, 500, 0, 1100, 1900);
-  } else if (joyValue > 550) {
+  } else if (joyValue > (middleJoystick + deadzone)) {
     pwmValue = map(joyValue, 550, 1023, 1100, 1900);
   } else {
     pwmValue = 1100;
   }
+
+  pwmRight = multification * pwmValue;
   
   rightServo.writeMicroseconds(pwmValue);
-  leftServo.writeMicroseconds(pwmValue);
+  leftServo.writeMicroseconds(pwmRight);
   
   Serial.print("Joystick Y: ");
   Serial.print(joyValue);
