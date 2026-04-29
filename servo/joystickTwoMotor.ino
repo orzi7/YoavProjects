@@ -48,8 +48,8 @@ void loop() {
 
   pwmRight = multification * pwmValue;
   
-  rightServo.writeMicroseconds(pwmValue);
-  leftServo.writeMicroseconds(pwmRight);
+  rightServo.writeMicroseconds(pwmRight);
+  leftServo.writeMicroseconds(pwmValue);
   
   Serial.print("Joystick Y: ");
   Serial.print(joyValue);
