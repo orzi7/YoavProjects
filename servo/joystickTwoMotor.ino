@@ -10,7 +10,7 @@ const int servoLeftPin = 10;
 const int deadzone = 20;
 const int middleJoystick = 430;
 
-const int multification = (2200/2450);
+const float multification = 2200.0 / 2450.0;
 
 int pwmValue;
 int pwmRight;
@@ -46,7 +46,8 @@ void loop() {
     pwmValue = 1100;
   }
 
-  pwmRight = multification * pwmValue;
+  pwmRight = 1100 + ((pwmValue - 1100) * multification);
+
   
   rightServo.writeMicroseconds(pwmRight);
   leftServo.writeMicroseconds(pwmValue);
