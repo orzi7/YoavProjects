@@ -1,5 +1,5 @@
 int state = 0;
-const int Yport = A1;
+const int Yport = A0;
 
 int Yvalue;
 int rawYvalue;
@@ -7,15 +7,29 @@ int rawYvalue;
 #include <SoftwareSerial.h>
 SoftwareSerial BTSerial(0, 1);
 
+const int middleJoystick = 430;
+const int deadzone = 100;
+
+const int minSpeed = 1100;
+const int maxSpeed = 1900;
+
+int pwmValue;
+
 void setup() {
-  BTSerial.begin(9600);
+  BTSerial.begin(38400);
 }
 
 void loop() {
   rawYvalue = analogRead(Yport);
-  Yvalue = map(rawYvalue, 0, 1023, 255, -255);
+  if (rawYvalue < (middleJoystick - deadzone)) {
+    pwmValue = map(rawYvalue, middleJoystick - deadzone, 0, minSpeed, maxSpeed);
+  } else if (rawYvalue > (middleJoystick + deadzone)) {
+    pwmValue = map(rawYvalue, middleJoystick + deadzone, 1023, minSpeed, maxSpeed);
+  } else {
+    pwmValue = minSpeed;
+  }
 
-  state = Yvalue;
+  state = pwmValue;
 
   Serial.println(state);
 
