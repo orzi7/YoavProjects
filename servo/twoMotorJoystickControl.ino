@@ -1,0 +1,85 @@
+#include <Wire.h>
+#include <Servo.h>
+#include <math.h>
+
+Servo rightServo;
+Servo leftServo;
+
+const int MPU_ADDR = 0x68;
+
+const int joystickYPin = A0;
+const int servoRightPin = 9;
+const int servoLeftPin = 10;
+
+const int minSpeed = 1100;
+const int maxSpeed = 1700;
+
+const int deadzone = 20;
+const int middleJoystick = 430;
+
+const float multification = 2200.0 / 2450.0;
+
+int pwmValue;
+int pwmRight;
+
+void motorControl(float KP, int TARGET_ANGLE, int basicSpeed) {
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x3B);
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPU_ADDR, 6, true);
+
+  if (Wire.available() == 6) {
+    int16_t AcX = Wire.read() << 8 | Wire.read();
+    int16_t AcY = Wire.read() << 8 | Wire.read();
+    int16_t AcZ = Wire.read() << 8 | Wire.read();
+
+    float angle = atan2(AcY, AcZ) * 180 / PI;
+
+    float error = TARGET_ANGLE - angle;
+    
+    int pwmOutput = basicSpeed + (error * KP);
+
+    return pwmOutput;
+}
+
+void setup() {
+  Serial.begin(9600);
+  rightServo.attach(servoRightPin);
+  leftServo.attach(servoLeftPin);
+  
+  // stopValue ~1100, midSpeedFwd ~1500, maxSpeedFwd ~1900
+  rightServo.writeMicroseconds(1500); // MIDDLE
+  leftServo.writeMicroseconds(1500); // MIDDLE
+  delay(100);
+  rightServo.writeMicroseconds(1900); // Max Forward
+  leftServo.writeMicroseconds(1900); // Max Forward
+  delay(500);
+  rightServo.writeMicroseconds(1500); // MIDDLE
+  leftServo.writeMicroseconds(1500); // MIDDLE
+  delay(500);
+  rightServo.writeMicroseconds(1100); // STOP
+  leftServo.writeMicroseconds(1100); // STOP
+  delay(500);
+}
+
+void loop() {
+  int joyValue = analogRead(joystickYPin);
+  
+  if (joyValue < (middleJoystick - deadzone)) {
+    pwmValue = map(joyValue, middleJoystick, 0, minSpeed, maxSpeed);
+  } else if (joyValue > (middleJoystick + deadzone)) {
+    pwmValue = map(joyValue, middleJoystick, 1023, minSpeed, maxSpeed);
+  } else {
+    pwmValue = minSpeed;
+  }
+
+  pwmRight = minSpeed + ((pwmValue - minSpeed) * multification);
+
+  rightServo.writeMicroseconds(motorControl(15, 0, pwmRight));
+  leftServo.writeMicroseconds(motorControl(15, 0, pwmValue));
+  
+  Serial.print("Joystick Y: ");
+  Serial.print(joyValue);
+  Serial.print(" --> PWM: ");
+  Serial.println(pwmValue);
+}
