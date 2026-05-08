@@ -4,9 +4,6 @@ const int Yport = A0;
 int Yvalue;
 int rawYvalue;
 
-#include <SoftwareSerial.h>
-SoftwareSerial BTSerial(0, 1);
-
 const int middleJoystick = 430;
 const int deadzone = 100;
 
@@ -16,8 +13,7 @@ const int maxSpeed = 1900;
 int pwmValue;
 
 void setup() {
-  BTSerial.begin(38400);
-  Serial.begin(9600);
+  Serial.begin(38400);
 }
 
 void loop() {
@@ -34,5 +30,5 @@ void loop() {
 
   Serial.println(state);
 
-  BTSerial.println(state);
+  delay(50);
 }
