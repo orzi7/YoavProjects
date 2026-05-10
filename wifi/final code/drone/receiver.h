@@ -14,7 +14,8 @@ class receiver {
   public:
     receiver(int dataPin);
     void init();
-    String readData();
+    String readRawData();
+    String getValue(String data, char separator, int index);
 };
 
 #endif

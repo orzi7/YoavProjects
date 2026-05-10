@@ -14,7 +14,19 @@ class transmitter {
   public:
     transmitter(int dataPin);
     void init();
-    void WriteData(String stringData);
+
+    template<typename... Args>
+    void writeData(const Args&... args) {
+      String finalData;
+      finalData.reserve(64);
+
+      int unpacker[] = { 0, (finalData += String(args), 0)... };
+      
+      (void)unpacker; 
+
+      driver.send((uint8_t *)finalData.c_str(), finalData.length());
+      driver.waitPacketSent();
+    }
 
 };
 

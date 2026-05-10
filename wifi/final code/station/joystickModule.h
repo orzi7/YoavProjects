@@ -1,20 +1,25 @@
-#ifndef transmitter_h
-#define transmitter_h
+#ifndef joystickModule_h
+#define joystickModule_h
 
 #include <Arduino.h>
-#include <RH_ASK.h>
-#ifdef RH_HAVE_HARDWARE_SPI
-#include <SPI.h> // Not actually used but needed to compile
-#endif
 
-class transmitter {
+class joystickModule {
   private:
-    int dataPin;
-    RH_ASK driver;
+    int xAxis;
+    int yAxis;
+    int SW;
+    int minSpeed;
+    int maxSpeed;
+
   public:
-    transmitter(int dataPin);
+    joystickModule(int xAxis, int yAxis, int SW, int minSpeed, int maxSpeed);
     void init();
-    void WriteData(String stringData);
+    long getRawXPose();
+    long getRawYPose();
+    long getMappedXPose();
+    long getMappedYPose();
+    int getSW();
+
 
 };
 

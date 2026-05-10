@@ -1,6 +1,5 @@
 #include "BLDC.h"
 
-// Initialize pins and constants using the Member Initializer List
 BLDC::BLDC(int rightPin, int leftPin) : 
   servoRightPin(rightPin), 
   servoLeftPin(leftPin), 
@@ -15,17 +14,17 @@ void BLDC::init() {
   leftServo.attach(servoLeftPin);
   
   // Brushless Motor / ESC Calibration Sequence
-  rightServo.writeMicroseconds(1500); 
-  leftServo.writeMicroseconds(1500); 
+  rightServo.write(1500); 
+  leftServo.write(1500); 
   delay(100);
-  rightServo.writeMicroseconds(1900); 
-  leftServo.writeMicroseconds(1900); 
+  rightServo.write(1900); 
+  leftServo.write(1900); 
   delay(500);
-  rightServo.writeMicroseconds(1500); 
-  leftServo.writeMicroseconds(1500); 
+  rightServo.write(1500); 
+  leftServo.write(1500); 
   delay(500);
-  rightServo.writeMicroseconds(1100); 
-  leftServo.writeMicroseconds(1100); 
+  rightServo.write(1100); 
+  leftServo.write(1100); 
   delay(500);
 }
 
@@ -45,6 +44,6 @@ void BLDC::controlMotors(float currentAngle, float KP, int TARGET_ANGLE, int bas
   if (rightPwm > maxSpeed) rightPwm = maxSpeed;
 
   // Write directly to the ESCs
-  leftServo.writeMicroseconds(leftPwm);
-  rightServo.writeMicroseconds(rightPwm);
+  leftServo.write(leftPwm);
+  rightServo.write(rightPwm);
 }

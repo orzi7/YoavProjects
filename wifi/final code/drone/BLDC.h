@@ -2,12 +2,12 @@
 #define BLDC_h
 
 #include <Arduino.h>
-#include <Servo.h>
+#include <ServoTimer2.h>
 
 class BLDC {
   private:
-    Servo rightServo;
-    Servo leftServo;
+    ServoTimer2 rightServo;
+    ServoTimer2 leftServo;
     int servoRightPin;
     int servoLeftPin;
     
@@ -19,7 +19,6 @@ class BLDC {
   public:
     BLDC(int rightPin, int leftPin);
     void init();
-    // Takes the current angle and directly drives the motors
     void controlMotors(float currentAngle, float KP, int TARGET_ANGLE, int basicSpeed);
 };
 

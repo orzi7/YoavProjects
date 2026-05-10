@@ -1,15 +1,38 @@
 #include <Arduino.h>
-#include "transmitter.h"
+#include "joystickModule.h"
 
-transmitter::transmitter(int dataPin) : dataPin(dataPin), driver(2000, 9, dataPin, 10) {
+joystickModule::joystickModule(int xAxis, int yAxis, int SW, int minSpeed, int maxSpeed) {
+  this->xAxis = xAxis;
+  this->yAxis = yAxis;
+  this->SW = SW;
+  this->minSpeed = minSpeed;
+  this->maxSpeed = maxSpeed;
 }
 
-void transmitter::init() {
-  if (!driver.init()) Serial.println("init failed");
+void joystickModule::init() {
+  pinMode(xAxis, INPUT);
+  pinMode(yAxis, INPUT);
+  pinMode(SW, INPUT);
+
 }
 
-void transmitter::WriteData(String data) {
-  const char *msg = data.c_str(); 
-  driver.send((uint8_t *)msg, strlen(msg));
-  driver.waitPacketSent();
+long joystickModule::getRawXPose() {
+  return analogRead(xAxis);
+}
+
+long joystickModule::getRawYPose() {
+  return analogRead(yAxis);
+}
+
+
+long joystickModule::getMappedXPose() {
+  return map(getRawXPose(), 0, 1023, this->minSpeed, this->maxSpeed);
+}
+
+long joystickModule::getMappedYPose() {
+  return map(getRawYPose(), 0, 1023, this->minSpeed, this->maxSpeed);
+}
+
+int joystickModule::getSW() {
+  return digitalRead(SW);
 }

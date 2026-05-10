@@ -1,6 +1,5 @@
 #include "LEDStrip.h"
 
-// Constructor: Set the pins using the Member Initializer List
 LEDStrip::LEDStrip(int rPin, int gPin, int bPin) : pinR(rPin), pinG(gPin), pinB(bPin) {
 }
 
@@ -9,16 +8,12 @@ void LEDStrip::init() {
   pinMode(pinG, OUTPUT);
   pinMode(pinB, OUTPUT);
   
-  // Make sure the strip is off when the Arduino first boots up
   turnOff(); 
 }
 
 void LEDStrip::setColor(int r, int g, int b) {
   // Common Anode logic: We want 255 to be full brightness (LOW) 
   // and 0 to be completely off (HIGH).
-  // Subtracting the value from 255 naturally inverts it for the hardware!
-  
-  // Constrain the values just in case invalid numbers are passed in
   r = constrain(r, 0, 255);
   g = constrain(g, 0, 255);
   b = constrain(b, 0, 255);
