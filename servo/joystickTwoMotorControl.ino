@@ -22,7 +22,7 @@ const float multification = 2200.0 / 2450.0;
 int pwmValue;
 int pwmRight;
 
-void motorControl(float KP, int TARGET_ANGLE, int basicSpeed) {
+int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
   Wire.endTransmission(false);
@@ -37,9 +37,23 @@ void motorControl(float KP, int TARGET_ANGLE, int basicSpeed) {
 
     float error = TARGET_ANGLE - angle;
     
-    int pwmOutput = basicSpeed + (error * KP);
+    if (motor == "left") {
+      pwmOutput = (multification * basicSpeed) - (error * KP);
+    }
+    else if (motor == "right") {
+      pwmOutput = basicSpeed + (error * KP);
+    }
+
+    if (pwmOutput < minSpeed) {
+      pwmOutput = minSpeed;
+    }
+
+    if (pwmOutput > maxSpeed) {
+      pwmOutput = maxSpeed;
+    }
 
     return pwmOutput;
+  }
 }
 
 void setup() {
@@ -73,13 +87,6 @@ void loop() {
     pwmValue = minSpeed;
   }
 
-  pwmRight = minSpeed + ((pwmValue - minSpeed) * multification);
-
-  rightServo.writeMicroseconds(motorControl(15, 0, pwmRight));
-  leftServo.writeMicroseconds(motorControl(15, 0, pwmValue));
-  
-  Serial.print("Joystick Y: ");
-  Serial.print(joyValue);
-  Serial.print(" --> PWM: ");
-  Serial.println(pwmValue);
+  rightServo.writeMicroseconds(motorControl("right", 5, 0, pwmValue));
+  leftServo.writeMicroseconds(motorControl("left", 5, 0, pwmValue));
 }
