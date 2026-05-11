@@ -9,11 +9,13 @@ const int Yport = A0;
 int Yvalue;
 int rawYvalue;
 
-const int middleJoystick = 430;
-const int deadzone = 100;
+const int middleJoystick = 512;
+const int deadzone = 50;
 
 const int minSpeed = 1100;
 const int maxSpeed = 1900;
+
+int speedValue;
 
 RH_ASK driver(2000, 9, 2, 10); // RX on 9, TX on 2
 
@@ -27,17 +29,34 @@ void setup()
 
 void loop()
 {
-    const char *msg = "NA";
+    //const char *msg = "NA";
 
     rawYvalue = analogRead(Yport);
+
     if (rawYvalue < (middleJoystick - deadzone)) {
-      msg = map(rawYvalue, middleJoystick - deadzone, 0, minSpeed, maxSpeed);
+      speedValue = map(rawYvalue, middleJoystick - deadzone, 0, minSpeed, maxSpeed);
     } else if (rawYvalue > (middleJoystick + deadzone)) {
-      msg = map(rawYvalue, middleJoystick + deadzone, 1023, minSpeed, maxSpeed);
+      speedValue = map(rawYvalue, middleJoystick + deadzone, 1023, minSpeed, maxSpeed);
     } else {
-      msg = minSpeed;
+      speedValue = minSpeed;
     }
     digitalWrite(13, HIGH);
+
+    if (speedValue < minSpeed) {
+      speedValue = minSpeed;
+    }
+
+    if (speedValue > maxSpeed) {
+      speedValue = maxSpeed;
+    }
+
+    String msgString = String(speedValue); 
+    const char *msg = msgString.c_str();
+
+
+    // הדפסה לדיבאג
+    Serial.print("Sending: ");
+    Serial.println(msg);
 
     driver.send((uint8_t *)msg, strlen(msg));
     driver.waitPacketSent();
