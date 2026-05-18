@@ -11,8 +11,11 @@ receiver myReceiver(2);
 
 // Balancing Constants
 const int midSpeed = 1500;
-const float KP = 5.0;
+const float KP = 0.3;
 const int TARGET_ANGLE = 0;
+int XAxis;
+int YAxis;
+int switchState;
 
 void setup() {
   myLEDs.init();
@@ -20,8 +23,8 @@ void setup() {
   myLEDs.setColor(255, 0, 0);
   delay(1000);
   
-  // myIMU.init();
-  // myMotors.init(); // Attaches servos and runs ESC calibration
+  myIMU.init();
+  myMotors.init(); // Attaches servos and runs ESC calibration
   myReceiver.init();
 
   myLEDs.turnOff();
@@ -36,27 +39,28 @@ void setup() {
 void loop() {
   String incomingData = myReceiver.readRawData();
 
-  // float currentAngle = myIMU.getAngle();
+  float currentAngle = myIMU.getAngle();
   if (incomingData != "NA" && incomingData != "") {
     
     // 3. Parse the saved variable, NOT the radio buffer
-    int XAxis = myReceiver.getValue(incomingData, ',', 0).toInt();
-    int YAxis = myReceiver.getValue(incomingData, ',', 1).toInt();
-    int switchState = myReceiver.getValue(incomingData, ',', 2).toInt();
+    XAxis = myReceiver.getValue(incomingData, ',', 0).toInt();
+    YAxis = myReceiver.getValue(incomingData, ',', 1).toInt();
+    switchState = myReceiver.getValue(incomingData, ',', 2).toInt();
     
     // Print them out nicely to verify
-    Serial.print("X: ");
+    Serial.println("X: ");
     Serial.print(XAxis);
     Serial.print(" | Y: ");
     Serial.print(YAxis);
     Serial.print(" | Switch: ");
-    Serial.println(switchState);
+    Serial.print(switchState);
+    Serial.print(" | Angle: ");
+    Serial.print(myIMU.getAngle());
+  
 
-    int redValue = map(XAxis, 1259, 1401, 0, 255);
-    int greenValue = map(YAxis, 1138, 1401, 0, 255);
-
-    myLEDs.setColor(redValue, greenValue, 0);
   }
 
-  // myMotors.controlMotors(currentAngle, KP, TARGET_ANGLE, midSpeed);
+  myMotors.controlMotors(currentAngle, KP, TARGET_ANGLE, XAxis);
+  // myMotors.rightMotor(XAxis);
+
 }

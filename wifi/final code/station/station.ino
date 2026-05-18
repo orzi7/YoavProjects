@@ -2,8 +2,8 @@
 #include "transmitter.h"
 #include "joystickModule.h"
 
-int minSpeed = 1100;
-int maxSpeed = 1700;
+int minSpeed = 1000;
+int maxSpeed = 2000;
 
 transmitter myTransmitter(2);
 joystickModule myJoystick(A0, A2, 8, minSpeed, maxSpeed);

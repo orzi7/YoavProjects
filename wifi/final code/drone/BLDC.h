@@ -20,6 +20,10 @@ class BLDC {
     BLDC(int rightPin, int leftPin);
     void init();
     void controlMotors(float currentAngle, float KP, int TARGET_ANGLE, int basicSpeed);
+    void rightMotor(int basicSpeed);
+    void leftMotor(int basicSpeed);
+
+
 };
 
 #endif
