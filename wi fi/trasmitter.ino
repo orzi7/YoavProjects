@@ -3,11 +3,10 @@
 #include <SPI.h> // Not actually used but needed to compile
 #endif
 
-int state = 0;
-const int Yport = A0;
+const int Xport = A1;
 
-int Yvalue;
-int rawYvalue;
+int Xvalue;
+int rawXvalue;
 
 const int middleJoystick = 512;
 const int deadzone = 50;
@@ -31,12 +30,12 @@ void loop()
 {
     //const char *msg = "NA";
 
-    rawYvalue = analogRead(Yport);
+    rawXvalue = analogRead(Xport);
 
-    if (rawYvalue < (middleJoystick - deadzone)) {
-      speedValue = map(rawYvalue, middleJoystick - deadzone, 0, minSpeed, maxSpeed);
-    } else if (rawYvalue > (middleJoystick + deadzone)) {
-      speedValue = map(rawYvalue, middleJoystick + deadzone, 1023, minSpeed, maxSpeed);
+    if (rawXvalue < (middleJoystick - deadzone)) {
+      speedValue = map(rawXvalue, middleJoystick - deadzone, 0, minSpeed, maxSpeed);
+    } else if (rawXvalue > (middleJoystick + deadzone)) {
+      speedValue = map(rawXvalue, middleJoystick + deadzone, 1023, minSpeed, maxSpeed);
     } else {
       speedValue = minSpeed;
     }
