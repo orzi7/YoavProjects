@@ -6,7 +6,7 @@
 #include <SPI.h> 
 #endif
 
-RH_ASK driver(2000, 2, 4, 5);
+RH_ASK driver(2000, 11, 4, 5);
 
 ServoTimer2 rightServo;
 ServoTimer2 leftServo;
@@ -24,7 +24,7 @@ const int middleJoystick = 430;
 
 const float multification = 2200.0 / 2450.0;
 
-int pwmValue;
+int pwmValue = 1100;
 
 int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
   Wire.beginTransmission(MPU_ADDR);
@@ -95,7 +95,11 @@ void loop() {
   }
 
   Serial.println(pwmValue);
-
-  rightServo.write(motorControl("right", 1.2, 0, pwmValue));
-  leftServo.write(motorControl("left", 1.2, 0, pwmValue));
+  if (pwmValue == 0) {
+    rightServo.write(minSpeed);
+    leftServo.write(minSpeed);
+  } else {
+    rightServo.write(motorControl("right", 1.2, 0, pwmValue));
+    leftServo.write(motorControl("left", 1.2, 0, pwmValue));
+  }
 }
