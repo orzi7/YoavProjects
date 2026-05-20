@@ -3,7 +3,7 @@
 #include <math.h>
 #include <RH_ASK.h>
 #ifdef RH_HAVE_HARDWARE_SPI
-#include <SPI.h>
+#include <SPI.h> 
 #endif
 
 RH_ASK driver(2000, 2, 4, 5);
@@ -32,7 +32,7 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 6, true);
 
-  int pwmOutput = basicSpeed;
+  int pwmOutput = basicSpeed; 
 
   if (Wire.available() == 6) {
     int16_t AcX = Wire.read() << 8 | Wire.read();
@@ -41,15 +41,12 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
 
     float angle = atan2(AcY, AcZ) * 180 / PI;
 
-    Serial.print("angle: ");
-    Serial.println(angle);
-
     float error = TARGET_ANGLE - angle;
     
     if (motor == "left") {
-      pwmOutput = minSpeed + ((basicSpeed - minSpeed) * multification) + (error * KP);
+      int netSpeed = basicSpeed - minSpeed;
+      pwmOutput = minSpeed + (netSpeed * multification) + (error * KP);
     }
-
     else if (motor == "right") {
       pwmOutput = basicSpeed - (error * KP);
     }
@@ -73,6 +70,7 @@ void setup() {
   if (!driver.init()) Serial.println("init failed");
   
   Wire.begin();
+  Wire.setWireTimeout(3000, true); 
   
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x6B);
@@ -82,9 +80,8 @@ void setup() {
   rightServo.attach(servoRightPin);
   leftServo.attach(servoLeftPin);
   
-  // stopValue ~1100, midSpeedFwd ~1500, maxSpeedFwd ~1900
-  rightServo.write(1100); // STOP
-  leftServo.write(1100); // STOP
+  rightServo.write(1100); 
+  leftServo.write(1100); 
   delay(3000);
 }
 
@@ -93,16 +90,12 @@ void loop() {
   uint8_t buflen = sizeof(buf);
 
   if (driver.recv(buf, &buflen)) {
-    String str = "";
-    for (int i = 0; i < buflen; i++) {
-      str += (char)buf[i];
-    }
-    pwmValue = str.toInt();
+    buf[buflen] = '\0'; 
+    pwmValue = atoi((char*)buf); 
   }
 
-  //Serial.print("basic speed: ");
-  //Serial.println(pwmValue);
+  Serial.println(pwmValue);
 
-  rightServo.write(motorControl("right", 5, 0, pwmValue));
-  leftServo.write(motorControl("left", 5, 0, pwmValue));
+  rightServo.write(motorControl("right", 1.2, 0, pwmValue));
+  leftServo.write(motorControl("left", 1.2, 0, pwmValue));
 }
