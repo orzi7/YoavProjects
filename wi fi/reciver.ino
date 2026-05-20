@@ -17,7 +17,7 @@ const int servoRightPin = 9;
 const int servoLeftPin = 10;
 
 const int minSpeed = 1100;
-const int maxSpeed = 1700;
+const int maxSpeed = 1800;
 
 const int deadzone = 20;
 const int middleJoystick = 430;
