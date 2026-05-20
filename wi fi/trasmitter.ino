@@ -49,11 +49,14 @@ void loop()
       speedValue = maxSpeed;
     }
 
+    if (digitalRead(4) == LOW) {
+      speedValue = 0;
+    }
+
     String msgString = String(speedValue); 
     const char *msg = msgString.c_str();
 
 
-    // הדפסה לדיבאג
     Serial.print("Sending: ");
     Serial.println(msg);
 
