@@ -22,14 +22,13 @@ void setup()
 {
     Serial.begin(9600);   // Debugging only
     if (!driver.init()) Serial.println("init failed");
-    pinMode(4, INPUT);
+    
+    pinMode(4, INPUT_PULLUP); 
     pinMode(13, OUTPUT);
 }
 
 void loop()
 {
-    //const char *msg = "NA";
-
     rawXvalue = analogRead(Xport);
 
     if (rawXvalue < (middleJoystick - deadzone)) {
@@ -50,12 +49,11 @@ void loop()
     }
 
     if (digitalRead(4) == LOW) {
-      speedValue = 0;
+      speedValue = 0; 
     }
 
     String msgString = String(speedValue); 
     const char *msg = msgString.c_str();
-
 
     Serial.print("Sending: ");
     Serial.println(msg);
