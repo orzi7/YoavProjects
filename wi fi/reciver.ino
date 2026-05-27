@@ -2,7 +2,7 @@
 #include <ServoTimer2.h>
 #include <math.h>
 #include <RH_ASK.h>
-#include <LiquidCrystal_I2C.h> // ספרית המסך
+#include <LiquidCrystal_I2C.h> 
 
 #ifdef RH_HAVE_HARDWARE_SPI
 #include <SPI.h> 
@@ -35,6 +35,10 @@ unsigned long lastDisplayTime = 0;
 const unsigned long displayInterval = 250; 
 float currentAngle = 0.0;
 
+int lastRightPWM = 1100;
+int lastLeftPWM = 1100;
+const int MAX_PWM_STEP = 30;
+
 int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
@@ -49,7 +53,7 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     int16_t AcZ = Wire.read() << 8 | Wire.read();
 
     float angle = atan2(AcY, AcZ) * 180 / PI;
-    currentAngle = angle
+    currentAngle = angle; 
 
     float error = TARGET_ANGLE - angle;
     
@@ -61,13 +65,8 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
       pwmOutput = basicSpeed - (error * KP);
     }
 
-    if (pwmOutput < minSpeed) {
-      pwmOutput = minSpeed;
-    }
-
-    if (pwmOutput > maxSpeed) {
-      pwmOutput = maxSpeed;
-    }
+    if (pwmOutput < minSpeed)  pwmOutput = minSpeed;
+    if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed;
 
     return pwmOutput;
   }
@@ -112,11 +111,24 @@ void loop() {
   }
 
   if (pwmValue == 0) {
+    lastRightPWM = minSpeed;
+    lastLeftPWM = minSpeed;
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
-    rightServo.write(motorControl("right", 1.2, 0, pwmValue));
-    leftServo.write(motorControl("left", 1.2, 0, pwmValue));
+    int targetRight = motorControl("right", 1.2, 0, pwmValue);
+    int targetLeft = motorControl("left", 1.2, 0, pwmValue);
+
+    int diffRight = targetRight - lastRightPWM;
+    diffRight = constrain(diffRight, -MAX_PWM_STEP, MAX_PWM_STEP);
+    lastRightPWM += diffRight;
+
+    int diffLeft = targetLeft - lastLeftPWM;
+    diffLeft = constrain(diffLeft, -MAX_PWM_STEP, MAX_PWM_STEP);
+    lastLeftPWM += diffLeft;
+
+    rightServo.write(lastRightPWM);
+    leftServo.write(lastLeftPWM);
   }
 
   if (millis() - lastDisplayTime >= displayInterval) {
