@@ -2,6 +2,8 @@
 #include <ServoTimer2.h>
 #include <math.h>
 #include <RH_ASK.h>
+#include <LiquidCrystal_I2C.h> // ספרית המסך
+
 #ifdef RH_HAVE_HARDWARE_SPI
 #include <SPI.h> 
 #endif
@@ -11,6 +13,8 @@ RH_ASK driver(2000, 11, 4, 5);
 ServoTimer2 rightServo;
 ServoTimer2 leftServo;
 
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+
 const int MPU_ADDR = 0x68;
 
 const int servoRightPin = 9;
@@ -18,6 +22,7 @@ const int servoLeftPin = 10;
 
 const int minSpeed = 1100;
 const int maxSpeed = 1800;
+const int minFlightSpeed = 1200;
 
 const int deadzone = 20;
 const int middleJoystick = 430;
@@ -25,6 +30,10 @@ const int middleJoystick = 430;
 const float multification = 2200.0 / 2450.0;
 
 int pwmValue = 1100;
+
+unsigned long lastDisplayTime = 0;
+const unsigned long displayInterval = 250; 
+float currentAngle = 0.0;
 
 int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
   Wire.beginTransmission(MPU_ADDR);
@@ -40,6 +49,7 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     int16_t AcZ = Wire.read() << 8 | Wire.read();
 
     float angle = atan2(AcY, AcZ) * 180 / PI;
+    currentAngle = angle
 
     float error = TARGET_ANGLE - angle;
     
@@ -70,12 +80,17 @@ void setup() {
   if (!driver.init()) Serial.println("init failed");
   
   Wire.begin();
-  Wire.setWireTimeout(3000, true); 
   
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x6B);
   Wire.write(0);    
   Wire.endTransmission(true);
+
+  lcd.init();
+  lcd.begin(16, 2);
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Drone Init...");
 
   rightServo.attach(servoRightPin);
   leftServo.attach(servoLeftPin);
@@ -83,6 +98,8 @@ void setup() {
   rightServo.write(1100); 
   leftServo.write(1100); 
   delay(3000);
+  
+  lcd.clear();
 }
 
 void loop() {
@@ -94,12 +111,25 @@ void loop() {
     pwmValue = atoi((char*)buf); 
   }
 
-  Serial.println(pwmValue);
   if (pwmValue == 0) {
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
     rightServo.write(motorControl("right", 1.2, 0, pwmValue));
     leftServo.write(motorControl("left", 1.2, 0, pwmValue));
+  }
+
+  if (millis() - lastDisplayTime >= displayInterval) {
+    lastDisplayTime = millis();
+    
+    lcd.setCursor(0, 0);
+    lcd.print("Angle: ");
+    lcd.print(currentAngle, 1); 
+    lcd.print("   "); 
+    
+    lcd.setCursor(0, 1);
+    lcd.print("PWM: ");
+    lcd.print(pwmValue);
+    lcd.print("   ");
   }
 }
