@@ -55,18 +55,20 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     float angle = atan2(AcY, AcZ) * 180 / PI;
     currentAngle = angle; 
 
-    float error = TARGET_ANGLE - angle;
+    // --- התיקון כאן: הפיכת כיוון השגיאה כדי שהתיקון לא יהיה הפוך ---
+    float error = angle - TARGET_ANGLE; 
     
     if (motor == "left") {
-      int netSpeed = basicSpeed - minSpeed;
-      pwmOutput = minSpeed + (netSpeed * multification) + (error * KP);
+      pwmOutput = basicSpeed + (error * KP);
+      if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed;
     }
     else if (motor == "right") {
-      pwmOutput = basicSpeed - (error * KP);
+      pwmOutput = multification * (basicSpeed - (error * KP));
+      if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed * multification;
     }
 
     if (pwmOutput < minSpeed)  pwmOutput = minSpeed;
-    if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed;
+    
 
     return pwmOutput;
   }
@@ -116,19 +118,14 @@ void loop() {
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
-    int targetRight = motorControl("right", 1.2, 0, pwmValue);
-    int targetLeft = motorControl("left", 1.2, 0, pwmValue);
+    int targetRight = motorControl("right", 0.9, 0, pwmValue);
+    int targetLeft = motorControl("left", 0.9, 0, pwmValue);
 
-    int diffRight = targetRight - lastRightPWM;
-    diffRight = constrain(diffRight, -MAX_PWM_STEP, MAX_PWM_STEP);
-    lastRightPWM += diffRight;
+    rightServo.write(targetRight);
+    leftServo.write(targetLeft);
 
-    int diffLeft = targetLeft - lastLeftPWM;
-    diffLeft = constrain(diffLeft, -MAX_PWM_STEP, MAX_PWM_STEP);
-    lastLeftPWM += diffLeft;
-
-    rightServo.write(lastRightPWM);
-    leftServo.write(lastLeftPWM);
+    lastRightPWM = targetRight;
+    lastLeftPWM = targetLeft;
   }
 
   if (millis() - lastDisplayTime >= displayInterval) {
@@ -140,8 +137,10 @@ void loop() {
     lcd.print("   "); 
     
     lcd.setCursor(0, 1);
-    lcd.print("PWM: ");
-    lcd.print(pwmValue);
-    lcd.print("   ");
+    lcd.print("L:");
+    lcd.print(lastLeftPWM);
+    lcd.print(" R:");
+    lcd.print(lastRightPWM);
+    lcd.print("   "); 
   }
 }
