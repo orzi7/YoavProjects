@@ -42,15 +42,22 @@ int lastRightPWM = 1100;
 int lastLeftPWM = 1100;
 const int MAX_PWM_STEP = 30;
 
-int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
+const float Kp = 1.6;
+const float Kd = 0.1;
+
+
+int motorControl(String motor, float KP, float KD, int TARGET_ANGLE, int basicSpeed) {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 6, true);
 
   int pwmOutput = basicSpeed; 
+  float lastError = 0;
+  float lastMillis = 0;
 
   if (Wire.available() == 6) {
+    // float currentMillis = millis();
     int16_t AcX = Wire.read() << 8 | Wire.read();
     int16_t AcY = Wire.read() << 8 | Wire.read();
     int16_t AcZ = Wire.read() << 8 | Wire.read();
@@ -58,15 +65,16 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     float angle = atan2(AcY, AcZ) * 180 / PI;
     currentAngle = angle; 
 
-    float error = TARGET_ANGLE - angle; 
+    float error = TARGET_ANGLE - angle;
+    float correction = (error * KP) + ((lastError - error) * KD);
     
     if (motor == "left") {
-      pwmOutput = basicSpeed + (error * KP);
+      pwmOutput = basicSpeed + correction;
       if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed;
     }
     
     else if (motor == "right") {
-      int rawRight = (basicSpeed - (error * KP));
+      int rawRight = (basicSpeed - correction);
       if (rawRight < (minSpeed + 200)) {
         pwmOutput = rawRight;
       } else {
@@ -77,7 +85,8 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
 
     if (pwmOutput < minSpeed)  pwmOutput = minSpeed;
     
-
+    lastError = error;
+    // lastMillis = currentMillis;
     return pwmOutput;
   }
   
@@ -128,8 +137,8 @@ void loop() {
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
-    rightSpeed = motorControl("right", 0.9, 0, pwmValue);
-    leftSpeed = motorControl("left", 0.9, 0, pwmValue);
+    rightSpeed = motorControl("right", Kp, Kd, 0, pwmValue);
+    leftSpeed = motorControl("left", Kp + 1, Kd, 0, pwmValue);
 
     rightServo.write(rightSpeed);
     leftServo.write(leftSpeed);
