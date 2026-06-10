@@ -17,8 +17,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 const int MPU_ADDR = 0x68;
 
-const int servoRightPin = 9;
-const int servoLeftPin = 10;
+const int servoRightPin = 9; //stronger
+const int servoLeftPin = 10; //weaker
 
 const int minSpeed = 1100;
 const int maxSpeed = 1800;
@@ -55,13 +55,13 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     float angle = atan2(AcY, AcZ) * 180 / PI;
     currentAngle = angle; 
 
-    // --- התיקון כאן: הפיכת כיוון השגיאה כדי שהתיקון לא יהיה הפוך ---
-    float error = angle - TARGET_ANGLE; 
+    float error = TARGET_ANGLE - angle; 
     
     if (motor == "left") {
       pwmOutput = basicSpeed + (error * KP);
       if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed;
     }
+    
     else if (motor == "right") {
       pwmOutput = multification * (basicSpeed - (error * KP));
       if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed * multification;
@@ -73,7 +73,7 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     return pwmOutput;
   }
   
-  return pwmOutput; 
+  //return pwmOutput; 
 }
 
 void setup() {
@@ -110,6 +110,8 @@ void loop() {
   if (driver.recv(buf, &buflen)) {
     buf[buflen] = '\0'; 
     pwmValue = atoi((char*)buf); 
+
+    Serial.println(pwmValue);
   }
 
   if (pwmValue == 0) {
@@ -118,14 +120,11 @@ void loop() {
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
-    int targetRight = motorControl("right", 0.9, 0, pwmValue);
-    int targetLeft = motorControl("left", 0.9, 0, pwmValue);
+    int rightSpeed = motorControl("right", 0.9, 0, pwmValue);
+    int leftSpeed = motorControl("left", 0.9, 0, pwmValue);
 
-    rightServo.write(targetRight);
-    leftServo.write(targetLeft);
-
-    lastRightPWM = targetRight;
-    lastLeftPWM = targetLeft;
+    rightServo.write(rightSpeed);
+    leftServo.write(leftSpeed);
   }
 
   if (millis() - lastDisplayTime >= displayInterval) {
@@ -138,9 +137,9 @@ void loop() {
     
     lcd.setCursor(0, 1);
     lcd.print("L:");
-    lcd.print(lastLeftPWM);
+    lcd.print(leftSpeed);
     lcd.print(" R:");
-    lcd.print(lastRightPWM);
+    lcd.print(rightSpeed);
     lcd.print("   "); 
   }
 }
