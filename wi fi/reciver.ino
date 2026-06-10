@@ -35,6 +35,9 @@ unsigned long lastDisplayTime = 0;
 const unsigned long displayInterval = 250; 
 float currentAngle = 0.0;
 
+int rightSpeed = minSpeed;
+int leftSpeed = minSpeed;
+
 int lastRightPWM = 1100;
 int lastLeftPWM = 1100;
 const int MAX_PWM_STEP = 30;
@@ -63,8 +66,13 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     }
     
     else if (motor == "right") {
-      pwmOutput = multification * (basicSpeed - (error * KP));
-      if (pwmOutput > maxSpeed)  pwmOutput = maxSpeed * multification;
+      int rawRight = (basicSpeed - (error * KP));
+      if (rawRight < (minSpeed + 200)) {
+        pwmOutput = rawRight;
+      } else {
+        pwmOutput = rawRight * multification;
+      }
+      if (pwmOutput > maxSpeed * multification)  pwmOutput = maxSpeed * multification;
     }
 
     if (pwmOutput < minSpeed)  pwmOutput = minSpeed;
@@ -73,7 +81,7 @@ int motorControl(String motor, float KP, int TARGET_ANGLE, int basicSpeed) {
     return pwmOutput;
   }
   
-  //return pwmOutput; 
+  return pwmOutput; 
 }
 
 void setup() {
@@ -120,8 +128,8 @@ void loop() {
     rightServo.write(minSpeed);
     leftServo.write(minSpeed);
   } else {
-    int rightSpeed = motorControl("right", 0.9, 0, pwmValue);
-    int leftSpeed = motorControl("left", 0.9, 0, pwmValue);
+    rightSpeed = motorControl("right", 0.9, 0, pwmValue);
+    leftSpeed = motorControl("left", 0.9, 0, pwmValue);
 
     rightServo.write(rightSpeed);
     leftServo.write(leftSpeed);
